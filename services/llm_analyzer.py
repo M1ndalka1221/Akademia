@@ -73,8 +73,21 @@ class LLMAnalyzer(BaseEssayAnalyzer):
 
         self.model_name: str = model_name
 
-        if self.api_key:
+        if self.api_key and not self._is_placeholder_key(self.api_key):
             genai.configure(api_key=self.api_key)
+
+    def _is_placeholder_key(self, key: str) -> bool:
+        """Check if the provided API key is empty or a default placeholder."""
+        if not key:
+            return True
+        key_lower = key.lower().strip()
+        placeholders = [
+            "your_gemini_api_key_here",
+            "your_gemini_api_key",
+            "your_api_key_here",
+            "change_me",
+        ]
+        return any(p in key_lower for p in placeholders)
 
     def analyze_essay(self, essay_content: str) -> dict[str, Any]:
         """
@@ -82,13 +95,22 @@ class LLMAnalyzer(BaseEssayAnalyzer):
 
         :param essay_content: User submitted essay text.
         :return: Dictionary with keys 'corrected_text', 'errors', and 'advanced_synonyms'.
-        :raises LLMAnalysisError: If content is empty, API key is missing, API fails, or response is invalid JSON.
+        :raises LLMAnalysisError: If content is empty, API key is missing/invalid, or response is invalid JSON.
         """
         if not essay_content or not essay_content.strip():
-            raise LLMAnalysisError("Essay content cannot be empty.")
+            raise LLMAnalysisError("Treść eseju nie może być pusta.")
 
-        if not self.api_key:
-            raise LLMAnalysisError("Google API Key is missing. Please configure GOOGLE_API_KEY.")
+        # Handle missing or placeholder API key
+        if not self.api_key or self._is_placeholder_key(self.api_key):
+            # In DEBUG mode with placeholder key, provide a friendly development feedback
+            if getattr(settings, "DEBUG", False):
+                logger.info("Placeholder GOOGLE_API_KEY detected in DEBUG mode. Generating development feedback.")
+                return self._generate_demo_response(essay_content)
+
+            raise LLMAnalysisError(
+                "Brak skonfigurowanego klucza Google API Key. Ustaw poprawny GOOGLE_API_KEY w pliku .env "
+                "(darmowy klucz można pobrać z https://aistudio.google.com/)."
+            )
 
         try:
             model = genai.GenerativeModel(
@@ -108,7 +130,7 @@ class LLMAnalyzer(BaseEssayAnalyzer):
             )
 
             if not response or not hasattr(response, "text") or not response.text:
-                raise LLMAnalysisError("Empty response received from Gemini API.")
+                raise LLMAnalysisError("Brak odpowiedzi z usługi Gemini API.")
 
             raw_text: str = response.text.strip()
             return self._parse_and_validate_response(raw_text)
@@ -117,15 +139,24 @@ class LLMAnalyzer(BaseEssayAnalyzer):
             logger.error("LLM essay analysis failed: %s", str(exc))
             if isinstance(exc, LLMAnalysisError):
                 raise exc
-            raise LLMAnalysisError(f"Failed to evaluate essay via Gemini API: {str(exc)}") from exc
+
+            exc_str = str(exc)
+            if "API_KEY_INVALID" in exc_str or "API key not valid" in exc_str:
+                # If invalid key was supplied, check DEBUG mode demo fallback or clear error
+                if getattr(settings, "DEBUG", False):
+                    logger.warning("Invalid API key received from Google API. Falling back to demo mode.")
+                    return self._generate_demo_response(essay_content)
+
+                raise LLMAnalysisError(
+                    "Podany klucz GOOGLE_API_KEY w pliku .env jest nieprawidłowy. "
+                    "Pobierz darmowy klucz z https://aistudio.google.com/ i podmień go w pliku .env."
+                ) from exc
+
+            raise LLMAnalysisError(f"Błąd analizy Gemini API: {str(exc)}") from exc
 
     def _parse_and_validate_response(self, raw_text: str) -> dict[str, Any]:
         """
         Parse raw text output into JSON and validate required schema keys.
-
-        :param raw_text: Raw response string from LLM.
-        :return: Validated JSON dict.
-        :raises LLMAnalysisError: If JSON parsing fails or required keys are missing.
         """
         clean_text: str = raw_text
         if clean_text.startswith("```json"):
@@ -139,12 +170,12 @@ class LLMAnalyzer(BaseEssayAnalyzer):
         try:
             data: dict[str, Any] = json.loads(clean_text)
         except json.JSONDecodeError as exc:
-            raise LLMAnalysisError(f"Invalid JSON response from LLM: {str(exc)}") from exc
+            raise LLMAnalysisError(f"Błędny format odpowiedzi JSON z LLM: {str(exc)}") from exc
 
         required_keys = {"corrected_text", "errors", "advanced_synonyms"}
         missing_keys = required_keys - set(data.keys())
         if missing_keys:
-            raise LLMAnalysisError(f"LLM response missing required JSON keys: {missing_keys}")
+            raise LLMAnalysisError(f"Odpowiedź LLM nie zawiera wymaganych kluczy: {missing_keys}")
 
         if not isinstance(data["corrected_text"], str):
             data["corrected_text"] = str(data["corrected_text"])
@@ -156,3 +187,30 @@ class LLMAnalyzer(BaseEssayAnalyzer):
             data["advanced_synonyms"] = []
 
         return data
+
+    def _generate_demo_response(self, essay_content: str) -> dict[str, Any]:
+        """
+        Generates realistic sample evaluation feedback for local development when GOOGLE_API_KEY is not configured.
+        """
+        words = essay_content.split()
+        sample_corrected = essay_content.replace("bardzo szybko", "dynamicznie").replace("lubię", "uwielbiam")
+        
+        return {
+            "corrected_text": sample_corrected,
+            "errors": [
+                "ℹ️ TRYB DEMO: Aby włączyć rzeczywistą analizę Gemini AI, dodaj darmowy klucz GOOGLE_API_KEY do pliku .env (z https://aistudio.google.com/).",
+                "Wstępna analiza: Zadbaj o większą różnorodność spójników w zdaniach złożonych (np. zamiast 'i' stosuj 'ponadto', 'co więcej')."
+            ],
+            "advanced_synonyms": [
+                {
+                    "original": "bardzo szybko",
+                    "suggestion": "dynamicznie / gwałtownie",
+                    "explanation": "Podnosi rejestr wypowiedzi na poziom C1."
+                },
+                {
+                    "original": "lubię",
+                    "suggestion": "mam zamiłowanie do / cenię sobie",
+                    "explanation": "Bardziej elegancki zwrot w języku pisanym."
+                }
+            ]
+        }

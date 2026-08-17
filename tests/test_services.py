@@ -44,14 +44,14 @@ def test_analyze_essay_success() -> None:
 def test_analyze_essay_empty_input_raises_error() -> None:
     """Test that empty or whitespace-only essay raises LLMAnalysisError."""
     analyzer = LLMAnalyzer(api_key="test_api_key")
-    with pytest.raises(LLMAnalysisError, match="Essay content cannot be empty"):
+    with pytest.raises(LLMAnalysisError, match="Treść eseju nie może być pusta"):
         analyzer.analyze_essay("   ")
 
 
 def test_analyze_essay_missing_api_key_raises_error() -> None:
     """Test that missing API key raises LLMAnalysisError."""
     analyzer = LLMAnalyzer(api_key="")
-    with pytest.raises(LLMAnalysisError, match="Google API Key is missing"):
+    with pytest.raises(LLMAnalysisError, match="Brak skonfigurowanego klucza"):
         analyzer.analyze_essay("Moje ulubione hobby to czytanie książek.")
 
 
@@ -66,7 +66,7 @@ def test_analyze_essay_invalid_json_raises_error() -> None:
         mock_model_instance.generate_content.return_value = mock_response
         mock_model_cls.return_value = mock_model_instance
         
-        with pytest.raises(LLMAnalysisError, match="Invalid JSON response from LLM"):
+        with pytest.raises(LLMAnalysisError, match="Błędny format odpowiedzi JSON"):
             analyzer.analyze_essay("Przykładowy esej.")
 
 
@@ -81,7 +81,7 @@ def test_analyze_essay_missing_keys_raises_error() -> None:
         mock_model_instance.generate_content.return_value = mock_response
         mock_model_cls.return_value = mock_model_instance
         
-        with pytest.raises(LLMAnalysisError, match="LLM response missing required JSON keys"):
+        with pytest.raises(LLMAnalysisError, match="Odpowiedź LLM nie zawiera wymaganych kluczy"):
             analyzer.analyze_essay("Przykładowy esej.")
 
 
@@ -94,5 +94,5 @@ def test_analyze_essay_api_exception_handling() -> None:
         mock_model_instance.generate_content.side_effect = Exception("Quota exceeded")
         mock_model_cls.return_value = mock_model_instance
         
-        with pytest.raises(LLMAnalysisError, match="Failed to evaluate essay via Gemini API"):
+        with pytest.raises(LLMAnalysisError, match="Błąd analizy Gemini API"):
             analyzer.analyze_essay("Przykładowy esej.")
