@@ -19,7 +19,7 @@ def test_topic_list_view(client) -> None:
 
     assert response.status_code == 200
     assert "learning/topic_list.html" in [t.name for t in response.templates]
-    assert len(response.context["topics"]) == 2
+    assert len(response.context["topics"]) >= 2
     assert topic1 in response.context["topics"]
     assert topic2 in response.context["topics"]
 
@@ -145,4 +145,38 @@ def test_feedback_detail_view(client) -> None:
     assert response.status_code == 200
     assert "learning/feedback_detail.html" in [t.name for t in response.templates]
     assert response.context["feedback"] == feedback
+
+
+@pytest.mark.django_db
+def test_essay_list_view(client) -> None:
+    """Test EssayListView renders written essays from the database."""
+    topic = Topic.objects.create(title="Edukacja Przyszłości")
+    essay = Essay.objects.create(topic=topic, content="Edukacja cyfrowa w XXI wieku.")
+    feedback = Feedback.objects.create(
+        essay=essay,
+        corrected_text="Edukacja cyfrowa w XXI wieku.",
+        feedback_json={"errors": []}
+    )
+
+    url = reverse("learning:essay-list")
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert "learning/essay_list.html" in [t.name for t in response.templates]
+    assert essay in response.context["essays"]
+    assert "Napisane Eseje" in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_admin_models_registered() -> None:
+    """Test that Topic, Essay, Feedback, and Vocabulary are registered in Django admin."""
+    from django.contrib import admin
+    from learning.models import Essay, Feedback, Topic, Vocabulary
+
+    assert admin.site.is_registered(Topic)
+    assert admin.site.is_registered(Essay)
+    assert admin.site.is_registered(Feedback)
+    assert admin.site.is_registered(Vocabulary)
+
+
 

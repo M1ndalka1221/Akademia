@@ -133,3 +133,17 @@ class FeedbackDetailView(DetailView):
     model = Feedback
     template_name = "learning/feedback_detail.html"
     context_object_name = "feedback"
+
+
+class EssayListView(ListView):
+    """View to list all written essays stored in the database."""
+
+    model = Essay
+    template_name = "learning/essay_list.html"
+    context_object_name = "essays"
+    paginate_by = 10
+
+    def get_queryset(self):
+        """Return all written essays ordered by creation date with related topic and feedback."""
+        return Essay.objects.select_related("topic", "feedback").order_by("-created_at")
+

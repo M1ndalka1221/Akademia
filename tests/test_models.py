@@ -68,3 +68,28 @@ def test_vocabulary_creation_and_str() -> None:
     )
     assert vocab.pk is not None
     assert str(vocab) == "wyzwanie - challenge"
+
+
+@pytest.mark.django_db
+def test_topic_and_essay_user_association(django_user_model) -> None:
+    """Test associating a user with Topic and Essay models."""
+    user = django_user_model.objects.create_user(
+        username="jan_kowalski",
+        email="jan@example.com",
+        password="secretpassword"
+    )
+    topic = Topic.objects.create(
+        user=user,
+        title="Własny temat użytkownika",
+        is_custom=True
+    )
+    essay = Essay.objects.create(
+        user=user,
+        topic=topic,
+        content="Przykładowa treść eseju napisanego przez użytkownika."
+    )
+    assert topic.user == user
+    assert essay.user == user
+    assert essay in user.essays.all()
+    assert topic in user.topics.all()
+

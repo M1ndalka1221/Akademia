@@ -5,12 +5,21 @@ Includes essay topics, user essays, AI feedback, and vocabulary items.
 """
 
 from typing import Any
+from django.conf import settings
 from django.db import models
 
 
 class Topic(models.Model):
     """Represents an essay prompt or topic for Polish language practice."""
 
+    user: models.ForeignKey = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="topics",
+        help_text="User who created this topic (null for AI/system default topics)."
+    )
     title: models.CharField = models.CharField(max_length=255)
     description: models.TextField = models.TextField(blank=True)
     is_custom: models.BooleanField = models.BooleanField(
@@ -31,6 +40,14 @@ class Topic(models.Model):
 class Essay(models.Model):
     """Represents an essay written by a user in Polish."""
 
+    user: models.ForeignKey = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="essays",
+        help_text="User who wrote this essay (null for anonymous/guest submissions)."
+    )
     topic: models.ForeignKey = models.ForeignKey(
         Topic,
         on_delete=models.CASCADE,
