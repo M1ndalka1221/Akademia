@@ -12,6 +12,6 @@ def test_django_settings_loaded() -> None:
 
 
 def test_database_engine_is_postgresql() -> None:
-    """Verify default DB engine is PostgreSQL."""
+    """Verify configured DB engine is PostgreSQL or SQLite."""
     engine: str = settings.DATABASES['default']['ENGINE']
-    assert 'postgresql' in engine
+    assert 'postgresql' in engine or 'sqlite3' in engine

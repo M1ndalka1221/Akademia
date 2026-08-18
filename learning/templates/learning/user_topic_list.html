@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Własne Tematy Esejów | Akademia{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Hero Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 glass-panel rounded-3xl p-8 border border-slate-800">
+        <div class="space-y-3 max-w-2xl">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                Stworzone przez Użytkowników
+            </span>
+            <h1 class="text-3xl sm:text-4xl font-display font-extrabold tracking-tight text-white">
+                Własne Tematy <span class="gradient-text">Esejów</span>
+            </h1>
+            <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
+                Przeglądaj własne tematy dodane przez użytkowników lub stwórz nowy temat, na który chcesz napisać esej i poddać analizie AI.
+            </p>
+        </div>
+        <div class="shrink-0">
+            <a href="{% url 'learning:topic-create' %}"
+               class="inline-flex items-center space-x-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-xl shadow-indigo-600/25">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span>Dodaj Własny Temat</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Topics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for topic in topics %}
+            <div class="glass-panel rounded-2xl p-6 flex flex-col justify-between hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 group">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-xs text-emerald-400 font-medium">
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">Własny temat #{{ topic.id }}</span>
+                        <span class="text-slate-500">{{ topic.created_at|date:"d.m.Y" }}</span>
+                    </div>
+                    <h2 class="text-xl font-display font-bold text-white group-hover:text-emerald-300 transition-colors">
+                        {{ topic.title }}
+                    </h2>
+                    <p class="text-sm text-slate-400 line-clamp-3 leading-relaxed">
+                        {{ topic.description|default:"Brak opisu." }}
+                    </p>
+                </div>
+
+                <div class="pt-6 mt-4 border-t border-slate-800/80">
+                    <a href="{% url 'learning:essay-create' topic.id %}" 
+                       class="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white font-medium text-sm transition-all duration-200 border border-slate-700 hover:border-indigo-500 shadow-md">
+                        <span>Napisz esej</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-span-full glass-panel rounded-2xl p-12 text-center space-y-4 border border-slate-800">
+                <div class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-500">
+                    <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 012.828 0L20.586 7.586a2 2 0 010 2.828L11.828 19H9v-2.828l8.586-8.586z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-white">Brak własnych tematów</h3>
+                <p class="text-slate-400 max-w-md mx-auto text-sm">
+                    Nie dodano jeszcze żadnego własnego tematu. Bądź pierwszy i dodaj temat, na który chcesz napisać esej!
+                </p>
+                <div class="pt-2">
+                    <a href="{% url 'learning:topic-create' %}" 
+                       class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition-all duration-200">
+                        <span>Dodaj Pierwszy Temat</span>
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

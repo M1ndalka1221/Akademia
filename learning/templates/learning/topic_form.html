@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Dodaj Własny Temat | Akademia{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="text-center space-y-2">
+        <a href="{% url 'learning:user-topic-list' %}" class="inline-flex items-center text-xs font-medium text-slate-400 hover:text-indigo-400 transition-colors mb-2">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            Powrót do Własnych Tematów
+        </a>
+        <h1 class="text-3xl font-display font-extrabold text-white">
+            Stwórz Własny <span class="gradient-text">Temat Eseju</span>
+        </h1>
+        <p class="text-slate-400 text-sm">
+            Zdefiniuj swój własny temat do napisania eseju po polsku. Po dodaniu będziesz mógł od razu przesłać tekst do analizy AI.
+        </p>
+    </div>
+
+    <!-- Form Panel -->
+    <div class="glass-panel rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-2xl">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="space-y-2">
+                <label for="{{ form.title.id_for_label }}" class="block text-sm font-semibold text-slate-200">
+                    {{ form.title.label }}
+                </label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <p class="text-xs text-rose-400 mt-1">{{ form.title.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="space-y-2">
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-semibold text-slate-200">
+                    {{ form.description.label }}
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <p class="text-xs text-rose-400 mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="pt-4 flex items-center justify-end space-x-4 border-t border-slate-800">
+                <a href="{% url 'learning:user-topic-list' %}" class="px-5 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 text-sm font-medium transition-all">
+                    Anuluj
+                </a>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-lg shadow-indigo-600/25 transition-all">
+                    Zapisz i Napisz Esej
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

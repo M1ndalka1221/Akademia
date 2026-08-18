@@ -98,6 +98,37 @@ def test_essay_create_view_post_llm_error_fallback(client) -> None:
 
 
 @pytest.mark.django_db
+def test_user_topic_list_view(client) -> None:
+    """Test UserTopicListView renders custom topics only."""
+    ai_topic = Topic.objects.create(title="AI Topic", is_custom=False)
+    custom_topic = Topic.objects.create(title="Custom User Topic", is_custom=True)
+
+    url = reverse("learning:user-topic-list")
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert "learning/user_topic_list.html" in [t.name for t in response.templates]
+    assert custom_topic in response.context["topics"]
+    assert ai_topic not in response.context["topics"]
+
+
+@pytest.mark.django_db
+def test_topic_create_view(client) -> None:
+    """Test TopicCreateView creates custom topic."""
+    url = reverse("learning:topic-create")
+    
+    # GET
+    get_res = client.get(url)
+    assert get_res.status_code == 200
+    assert "learning/topic_form.html" in [t.name for t in get_res.templates]
+
+    # POST
+    post_res = client.post(url, {"title": "Nowy temat", "description": "Opis"})
+    assert post_res.status_code == 302
+    assert Topic.objects.filter(title="Nowy temat", is_custom=True).exists()
+
+
+@pytest.mark.django_db
 def test_feedback_detail_view(client) -> None:
     """Test FeedbackDetailView renders feedback information."""
     topic = Topic.objects.create(title="Sztuczna Inteligencja")
@@ -114,3 +145,4 @@ def test_feedback_detail_view(client) -> None:
     assert response.status_code == 200
     assert "learning/feedback_detail.html" in [t.name for t in response.templates]
     assert response.context["feedback"] == feedback
+

@@ -9,7 +9,11 @@ def test_topic_model(sample_topic: Topic) -> None:
     """Test Topic model attributes and string representation."""
     assert sample_topic.pk is not None
     assert sample_topic.title == "Przyszłość sztucznej inteligencji"
+    assert sample_topic.is_custom is False
     assert str(sample_topic) == "Przyszłość sztucznej inteligencji"
+
+    custom_topic = Topic.objects.create(title="Temat użytkownika", is_custom=True)
+    assert custom_topic.is_custom is True
 
 
 @pytest.mark.django_db

@@ -66,9 +66,15 @@
                 </a>
 
                 <!-- Navigation Links -->
-                <nav class="flex items-center space-x-4">
+                <nav class="flex items-center space-x-3">
                     <a href="{% url 'learning:topic-list' %}" class="text-sm font-medium text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-800/60 transition-all">
-                        Tematy Esejów
+                        Tematy AI
+                    </a>
+                    <a href="{% url 'learning:user-topic-list' %}" class="text-sm font-medium text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-800/60 transition-all">
+                        Własne Tematy
+                    </a>
+                    <a href="{% url 'learning:topic-create' %}" class="text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 px-3.5 py-2 rounded-xl shadow-lg shadow-indigo-600/25 transition-all">
+                        + Dodaj Temat
                     </a>
                 </nav>
             </div>

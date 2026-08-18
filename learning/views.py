@@ -12,18 +12,56 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView
 
-from learning.forms import EssayForm
+from learning.forms import EssayForm, TopicForm
 from learning.models import Essay, Feedback, Topic
 from services.llm_analyzer import LLMAnalysisError, LLMAnalyzer
 
 
 class TopicListView(ListView):
-    """View to list all available essay topics."""
+    """View to list default / AI-generated essay topics."""
 
     model = Topic
     template_name = "learning/topic_list.html"
     context_object_name = "topics"
     paginate_by = 10
+
+    def get_queryset(self):
+        """Return only non-custom (AI) topics."""
+        return Topic.objects.filter(is_custom=False)
+
+
+class UserTopicListView(ListView):
+    """View to list user-created custom essay topics (UsersEssays)."""
+
+    model = Topic
+    template_name = "learning/user_topic_list.html"
+    context_object_name = "topics"
+    paginate_by = 10
+
+    def get_queryset(self):
+        """Return only user-created custom topics."""
+        return Topic.objects.filter(is_custom=True)
+
+
+class TopicCreateView(CreateView):
+    """View for users to add a custom essay topic."""
+
+    model = Topic
+    form_class = TopicForm
+    template_name = "learning/topic_form.html"
+
+    def form_valid(self, form: TopicForm) -> HttpResponseRedirect:
+        """Save custom topic with is_custom=True and redirect to write an essay."""
+        topic: Topic = form.save(commit=False)
+        topic.is_custom = True
+        topic.save()
+        messages.success(
+            self.request,
+            f"Pomyślnie dodano własny temat: '{topic.title}'. Teraz możesz napisać esej!"
+        )
+        return HttpResponseRedirect(
+            reverse("learning:essay-create", kwargs={"topic_id": topic.pk})
+        )
 
 
 class EssayCreateView(CreateView):

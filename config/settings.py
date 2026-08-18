@@ -74,16 +74,26 @@ ASGI_APPLICATION: str = "config.asgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES: dict = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "akademia_db"),
-        "USER": os.getenv("POSTGRES_USER", "akademia_user"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "akademia_password"),
-        "HOST": os.getenv("POSTGRES_HOST", "db"),
-        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+USE_SQLITE: bool = os.getenv("USE_SQLITE", "True").lower() in ("true", "1", "yes")
+
+if USE_SQLITE:
+    DATABASES: dict = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
+else:
+    DATABASES: dict = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("POSTGRES_DB", "akademia_db"),
+            "USER": os.getenv("POSTGRES_USER", "akademia_user"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD", "akademia_password"),
+            "HOST": os.getenv("POSTGRES_HOST", "db"),
+            "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        }
+    }
 
 
 # Password validation

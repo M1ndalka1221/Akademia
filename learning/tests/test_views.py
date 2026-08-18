@@ -73,6 +73,52 @@ def test_essay_create_view_post_with_mocked_llm(
 
 
 @pytest.mark.django_db
+def test_user_topic_list_view(client: Client, sample_topic: Topic) -> None:
+    """Test UserTopicListView lists only custom user-created topics."""
+    custom_topic = Topic.objects.create(
+        title="Mój własny temat",
+        description="Opis własnego tematu",
+        is_custom=True
+    )
+    url = reverse("learning:user-topic-list")
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert custom_topic in response.context["topics"]
+    assert sample_topic not in response.context["topics"]
+
+
+@pytest.mark.django_db
+def test_topic_create_view_get(client: Client) -> None:
+    """Test TopicCreateView GET request renders topic_form.html."""
+    url = reverse("learning:topic-create")
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert "learning/topic_form.html" in [t.name for t in response.templates]
+
+
+@pytest.mark.django_db
+def test_topic_create_view_post(client: Client) -> None:
+    """Test TopicCreateView POST request creates a custom topic and redirects to essay creation."""
+    url = reverse("learning:topic-create")
+    post_data = {
+        "title": "Nowy temat użytkownika",
+        "description": "Szczegółowy opis nowego tematu."
+    }
+    response = client.post(url, post_data)
+
+    assert Topic.objects.filter(title="Nowy temat użytkownika").exists()
+    topic = Topic.objects.get(title="Nowy temat użytkownika")
+    assert topic.is_custom is True
+    assert topic.description == "Szczegółowy opis nowego tematu."
+
+    expected_url = reverse("learning:essay-create", kwargs={"topic_id": topic.pk})
+    assert response.status_code == 302
+    assert response.url == expected_url
+
+
+@pytest.mark.django_db
 def test_feedback_detail_view(client: Client, sample_essay: Essay, mock_analysis_payload: Dict[str, Any]) -> None:
     """Test FeedbackDetailView displays evaluation feedback."""
     feedback = Feedback.objects.create(
@@ -86,3 +132,4 @@ def test_feedback_detail_view(client: Client, sample_essay: Essay, mock_analysis
 
     assert response.status_code == 200
     assert response.context["feedback"] == feedback
+
