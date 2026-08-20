@@ -5,6 +5,7 @@ from learning.views import (
     EssayCreateView,
     EssayListView,
     FeedbackDetailView,
+    FlashcardView,
     TopicCreateView,
     TopicListView,
     UserTopicListView,
@@ -27,6 +28,7 @@ urlpatterns = [
     path("vocabulary/new/", VocabularyCreateView.as_view(), name="vocabulary-create"),
     path("vocabulary/generate/", VocabularyGenerateAIView.as_view(), name="vocabulary-generate"),
     path("vocabulary/<int:pk>/delete/", VocabularyDeleteView.as_view(), name="vocabulary-delete"),
+    path("flashcards/", FlashcardView.as_view(), name="flashcard-list"),
 ]
 
 

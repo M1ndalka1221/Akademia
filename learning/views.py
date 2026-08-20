@@ -1,3 +1,4 @@
+import json
 from typing import Any, Dict
 from django.contrib import messages
 from django.db import transaction
@@ -257,5 +258,47 @@ class VocabularyDeleteView(DeleteView):
         vocab = self.get_object()
         messages.info(self.request, f"Usunięto słówko: '{vocab.word}'.")
         return super().form_valid(form)
+
+
+class FlashcardView(ListView):
+    """View to display interactive C1 Polish-Russian flashcards."""
+
+    model = Vocabulary
+    template_name = "learning/flashcard_list.html"
+    context_object_name = "vocabularies"
+
+    def get_queryset(self):
+        """Filter vocabulary by optional source parameter ('ai', 'custom', 'all')."""
+        queryset = Vocabulary.objects.all().order_by("-created_at")
+        source = self.request.GET.get("source", "all")
+        if source == "ai":
+            queryset = queryset.filter(is_custom=False)
+        elif source == "custom":
+            queryset = queryset.filter(is_custom=True)
+        return queryset
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        """Inject JSON serialized flashcards array into template context for JS engine."""
+        context = super().get_context_data(**kwargs)
+        source_filter = self.request.GET.get("source", "all")
+        queryset = self.get_queryset()
+
+        vocab_json_list = [
+            {
+                "id": v.pk,
+                "word": v.word,
+                "translation": v.translation,
+                "example_sentence": v.example_sentence,
+                "level": v.level,
+                "is_custom": v.is_custom,
+            }
+            for v in queryset
+        ]
+
+        context["source_filter"] = source_filter
+        context["vocab_json"] = json.dumps(vocab_json_list)
+        context["vocab_count"] = len(vocab_json_list)
+        return context
+
 
 

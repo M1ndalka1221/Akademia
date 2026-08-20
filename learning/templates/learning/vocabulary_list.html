@@ -26,6 +26,11 @@
         </div>
         
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 relative z-10">
+            <a href="{% url 'learning:flashcard-list' %}"
+               class="inline-flex items-center justify-center space-x-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-amber-500/20 border border-amber-400/30 group">
+                <span class="group-hover:scale-110 transition-transform">🎴</span>
+                <span>Otwórz Fiszki C1</span>
+            </a>
             <a href="{% url 'learning:vocabulary-generate' %}"
                class="inline-flex items-center justify-center space-x-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-600/25 border border-purple-400/20 group">
                 <span class="group-hover:scale-110 transition-transform">⚡</span>
