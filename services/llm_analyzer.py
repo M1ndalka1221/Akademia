@@ -36,11 +36,20 @@ class BaseEssayAnalyzer(ABC):
     def generate_c1_vocabulary(self, count: int = 5, theme: Optional[str] = None) -> list[dict[str, str]]:
         """
         Generate C1 level Polish vocabulary words with Russian translations.
+        """
+        pass
 
-        :param count: Number of vocabulary items to generate.
-        :param theme: Optional topic or focus theme.
-        :return: List of dicts containing 'word', 'translation', and 'example_sentence'.
-        :raises LLMAnalysisError: If generation fails.
+    @abstractmethod
+    def generate_vocabulary_quiz(self, vocab_items: Optional[list[dict[str, str]]] = None, count: int = 5) -> list[dict[str, Any]]:
+        """
+        Generate a C1 vocabulary quiz.
+        """
+        pass
+
+    @abstractmethod
+    def validate_sentence_correction(self, original_error: str, user_rewrite: str, context_essay: str = "") -> dict[str, Any]:
+        """
+        Validate student's rewritten sentence against an indicated essay error.
         """
         pass
 
@@ -82,6 +91,34 @@ class LLMAnalyzer(BaseEssayAnalyzer):
         '    "example_sentence": "string (natural Polish example sentence demonstrating C1 usage)"\n'
         "  }\n"
         "]"
+    )
+
+    QUIZ_SYSTEM_PROMPT: str = (
+        "You are an expert C1 Polish language examiner and quiz creator. "
+        "Create a 5-question multiple choice quiz based on C1 Polish vocabulary words. "
+        "Each question must have 4 options (A, B, C, D) and specify the 0-based index of the correct option, "
+        "along with a brief explanation in Polish. "
+        "You MUST return ONLY a valid JSON array matching this exact schema without extra text:\n"
+        "[\n"
+        "  {\n"
+        '    "id": 1,\n'
+        '    "question": "string (the question in Polish)",\n'
+        '    "options": ["option 0", "option 1", "option 2", "option 3"],\n'
+        '    "correct_option_index": 0,\n'
+        '    "explanation": "string (brief explanation why this option is correct)"\n'
+        "  }\n"
+        "]"
+    )
+
+    CORRECTION_SYSTEM_PROMPT: str = (
+        "You are an expert C1 Polish language examiner evaluating a student's rewrite of a sentence containing an error. "
+        "Evaluate whether the student's rewritten sentence successfully corrects the error while maintaining appropriate C1 Polish register. "
+        "You MUST return ONLY a valid JSON object matching this exact schema without extra text:\n"
+        "{\n"
+        '  "is_correct": true,\n'
+        '  "feedback": "string (constructive feedback explaining if the correction is accurate)",\n'
+        '  "improved_suggestion": "string (optional elevated C1/C2 phrasing)"\n'
+        "}"
     )
 
     def __init__(
@@ -379,4 +416,201 @@ class LLMAnalyzer(BaseEssayAnalyzer):
         if count >= len(demo_pool):
             return demo_pool
         return random.sample(demo_pool, count)
+
+    def generate_vocabulary_quiz(self, vocab_items: Optional[list[dict[str, str]]] = None, count: int = 5) -> list[dict[str, Any]]:
+        """
+        Generate a 5-question C1 vocabulary quiz using Gemini LLM based on user's vocabulary.
+        """
+        if not self.api_key or self._is_placeholder_key(self.api_key):
+            if getattr(settings, "DEBUG", False):
+                logger.info("Placeholder GOOGLE_API_KEY detected in DEBUG mode. Generating demo vocabulary quiz.")
+                return self._generate_demo_quiz()
+            raise LLMAnalysisError(
+                "Brak skonfigurowanego klucza Google API Key. Ustaw poprawny GOOGLE_API_KEY w pliku .env."
+            )
+
+        try:
+            model = genai.GenerativeModel(
+                model_name=self.model_name,
+                system_instruction=self.QUIZ_SYSTEM_PROMPT
+            )
+            words_context = ""
+            if vocab_items:
+                words_str = ", ".join([f"'{item.get('word', '')}' ({item.get('translation', '')})" for item in vocab_items[:10]])
+                words_context = f" Base the quiz questions on these C1 words: {words_str}."
+
+            prompt = f"Create a {count}-question multiple choice quiz testing C1 level Polish vocabulary.{words_context}"
+            generation_config = genai.GenerationConfig(
+                response_mime_type="application/json",
+                temperature=0.5
+            )
+
+            response = model.generate_content(prompt, generation_config=generation_config)
+            if not response or not hasattr(response, "text") or not response.text:
+                raise LLMAnalysisError("Brak odpowiedzi z Gemini API dla quizu.")
+
+            return self._parse_and_validate_quiz_response(response.text.strip())
+
+        except Exception as exc:
+            logger.error("LLM quiz generation failed: %s", str(exc))
+            if isinstance(exc, LLMAnalysisError):
+                raise exc
+            if getattr(settings, "DEBUG", False):
+                return self._generate_demo_quiz()
+            raise LLMAnalysisError(f"Błąd generowania quizu Gemini API: {str(exc)}") from exc
+
+    def _parse_and_validate_quiz_response(self, raw_text: str) -> list[dict[str, Any]]:
+        """Parse raw JSON response for quiz questions and validate structure."""
+        clean_text = raw_text.strip()
+        if clean_text.startswith("```json"):
+            clean_text = clean_text[7:]
+        if clean_text.startswith("```"):
+            clean_text = clean_text[3:]
+        if clean_text.endswith("```"):
+            clean_text = clean_text[:-3]
+        clean_text = clean_text.strip()
+
+        try:
+            items = json.loads(clean_text)
+        except json.JSONDecodeError as exc:
+            raise LLMAnalysisError(f"Błędny format odpowiedzi JSON z LLM dla quizu: {str(exc)}") from exc
+
+        if not isinstance(items, list) or not items:
+            raise LLMAnalysisError("Odpowiedź Gemini API dla quizu musi być niepustą listą pytań.")
+
+        validated = []
+        for idx, item in enumerate(items, 1):
+            if isinstance(item, dict) and "question" in item and "options" in item:
+                validated.append({
+                    "id": item.get("id", idx),
+                    "question": str(item["question"]),
+                    "options": [str(opt) for opt in item.get("options", [])],
+                    "correct_option_index": int(item.get("correct_option_index", 0)),
+                    "explanation": str(item.get("explanation", ""))
+                })
+
+        return validated
+
+    def _generate_demo_quiz(self) -> list[dict[str, Any]]:
+        """Generates realistic C1 vocabulary quiz questions for development mode."""
+        return [
+            {
+                "id": 1,
+                "question": "Wybierz słowo oznaczające 'скрупулезность / тщательность':",
+                "options": ["skrupulatność", "zawiłość", "błyskotliwość", "dociekliwość"],
+                "correct_option_index": 0,
+                "explanation": "Skrupulatność to dokładność i dbałość o szczegóły (скрупулезность)."
+            },
+            {
+                "id": 2,
+                "question": "Co oznacza zwrot C1 'poddać w wątpliwość'?",
+                "options": ["поставить под сомнение", "доказать правоту", "сожалеть о содеянном", "подчеркнуть важность"],
+                "correct_option_index": 0,
+                "explanation": "'Poddać w wątpliwość' to zwrot oficjalny oznaczający zakwestionowanie."
+            },
+            {
+                "id": 3,
+                "question": "Wskaż właściwe tłumaczenie słowa 'zawiłość':",
+                "options": ["сложность / запутанность", "простота i ясность", "остроумие", "скорость"],
+                "correct_option_index": 0,
+                "explanation": "Zawiłość oznacza skomplikowany, zawiły charakter sprawy."
+            },
+            {
+                "id": 4,
+                "question": "Który zwrot najlepiej zastąpi potoczne 'lubię' w eseju naukowym?",
+                "options": ["mam zamiłowanie do", "bardzo lubię", "chcę powiedzieć", "fajnie uważam"],
+                "correct_option_index": 0,
+                "explanation": "'Mam zamiłowanie do' lub 'cenię sobie' to zwroty właściwe dla rejestru C1."
+            },
+            {
+                "id": 5,
+                "question": "Słowo 'ubolewać' w zdaniu 'Ubolewam nad tym faktem' oznacza:",
+                "options": ["сожалеть / сокрушаться", "радоваться", "удивляться", "сомневаться"],
+                "correct_option_index": 0,
+                "explanation": "'Ubolewać' oznacza odczuwać smutek lub żal z jakiegoś powodu."
+            }
+        ]
+
+    def validate_sentence_correction(self, original_error: str, user_rewrite: str, context_essay: str = "") -> dict[str, Any]:
+        """
+        Validate student's rewritten sentence against an indicated essay error using Gemini LLM.
+        """
+        if not user_rewrite or not user_rewrite.strip():
+            raise LLMAnalysisError("Wpisz poprawną wersję zdania przed wysłaniem.")
+
+        if not self.api_key or self._is_placeholder_key(self.api_key):
+            if getattr(settings, "DEBUG", False):
+                logger.info("Placeholder GOOGLE_API_KEY detected in DEBUG mode. Generating demo sentence correction response.")
+                return self._generate_demo_correction_validation(original_error, user_rewrite)
+            raise LLMAnalysisError("Brak skonfigurowanego klucza Google API Key.")
+
+        try:
+            model = genai.GenerativeModel(
+                model_name=self.model_name,
+                system_instruction=self.CORRECTION_SYSTEM_PROMPT
+            )
+            prompt = (
+                f"Original error/issue: {original_error}\n"
+                f"Student's proposed rewrite: {user_rewrite}\n"
+            )
+            if context_essay:
+                prompt += f"Context essay snippet: {context_essay[:200]}\n"
+
+            generation_config = genai.GenerationConfig(
+                response_mime_type="application/json",
+                temperature=0.2
+            )
+
+            response = model.generate_content(prompt, generation_config=generation_config)
+            if not response or not hasattr(response, "text") or not response.text:
+                raise LLMAnalysisError("Brak odpowiedzi z Gemini API dla weryfikacji poprawki.")
+
+            return self._parse_and_validate_correction_response(response.text.strip())
+
+        except Exception as exc:
+            logger.error("LLM sentence correction validation failed: %s", str(exc))
+            if isinstance(exc, LLMAnalysisError):
+                raise exc
+            if getattr(settings, "DEBUG", False):
+                return self._generate_demo_correction_validation(original_error, user_rewrite)
+            raise LLMAnalysisError(f"Błąd weryfikacji poprawki Gemini API: {str(exc)}") from exc
+
+    def _parse_and_validate_correction_response(self, raw_text: str) -> dict[str, Any]:
+        """Parse raw JSON response for sentence correction validation."""
+        clean_text = raw_text.strip()
+        if clean_text.startswith("```json"):
+            clean_text = clean_text[7:]
+        if clean_text.startswith("```"):
+            clean_text = clean_text[3:]
+        if clean_text.endswith("```"):
+            clean_text = clean_text[:-3]
+        clean_text = clean_text.strip()
+
+        try:
+            data = json.loads(clean_text)
+        except json.JSONDecodeError as exc:
+            raise LLMAnalysisError(f"Błędny format odpowiedzi JSON z LLM dla weryfikacji poprawki: {str(exc)}") from exc
+
+        return {
+            "is_correct": bool(data.get("is_correct", True)),
+            "feedback": str(data.get("feedback", "Weryfikacja zakończona.")),
+            "improved_suggestion": str(data.get("improved_suggestion", ""))
+        }
+
+    def _generate_demo_correction_validation(self, original_error: str, user_rewrite: str) -> dict[str, Any]:
+        """Generates realistic feedback on sentence rewrites for development mode."""
+        is_good = len(user_rewrite.strip()) > 8
+        if is_good:
+            return {
+                "is_correct": True,
+                "feedback": f"Świetnie! Poprawka '{user_rewrite}' skutecznie eliminuje błąd i wpisuje się w rejestr C1.",
+                "improved_suggestion": "Dodatkowo możesz zastosować zwrot: 'biorąc pod uwagę powyższe aspekty'."
+            }
+        else:
+            return {
+                "is_correct": False,
+                "feedback": "Propozycja jest zbyt krótka lub niedokładna. Spróbuj sformułować pełne, eleganckie zdanie.",
+                "improved_suggestion": "Sugerowana wersja: 'Zważywszy na powyższe okoliczności, należy wyciągnąć wnioski.'"
+            }
+
 

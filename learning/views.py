@@ -3,8 +3,8 @@ from typing import Any, Dict
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, View
 
@@ -299,6 +299,61 @@ class FlashcardView(ListView):
         context["vocab_json"] = json.dumps(vocab_json_list)
         context["vocab_count"] = len(vocab_json_list)
         return context
+
+
+class QuizView(View):
+    """View to generate and display an interactive 5-question C1 vocabulary quiz."""
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        analyzer = LLMAnalyzer()
+        vocab_items = list(Vocabulary.objects.values("word", "translation")[:15])
+
+        try:
+            questions = analyzer.generate_vocabulary_quiz(vocab_items=vocab_items, count=5)
+        except LLMAnalysisError as exc:
+            messages.error(request, f"Nie udało się wygenerować quizu: {str(exc)}")
+            questions = analyzer._generate_demo_quiz()
+
+        context = {
+            "questions": questions,
+            "quiz_json": json.dumps(questions),
+            "total_questions": len(questions)
+        }
+        return render(request, "learning/quiz_detail.html", context)
+
+
+class EssayCorrectionValidateView(View):
+    """AJAX endpoint for validating student's sentence rewrites in Tryb Poprawy."""
+
+    def post(self, request: HttpRequest, pk: int, *args: Any, **kwargs: Any) -> JsonResponse:
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+        except Exception:
+            data = request.POST
+
+        original_error = data.get("original_error", "").strip()
+        user_rewrite = data.get("user_rewrite", "").strip()
+
+        if not user_rewrite:
+            return JsonResponse({"success": False, "error": "Wpisz poprawną wersję zdania."}, status=400)
+
+        essay_context = ""
+        feedback_obj = Feedback.objects.filter(pk=pk).first()
+        if feedback_obj:
+            essay_context = feedback_obj.essay.content
+
+        analyzer = LLMAnalyzer()
+        try:
+            result = analyzer.validate_sentence_correction(
+                original_error=original_error,
+                user_rewrite=user_rewrite,
+                context_essay=essay_context
+            )
+            return JsonResponse({"success": True, "result": result})
+        except LLMAnalysisError as exc:
+            return JsonResponse({"success": False, "error": str(exc)}, status=400)
+
+
 
 
 

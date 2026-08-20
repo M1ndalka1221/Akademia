@@ -2,10 +2,12 @@
 
 from django.urls import path
 from learning.views import (
+    EssayCorrectionValidateView,
     EssayCreateView,
     EssayListView,
     FeedbackDetailView,
     FlashcardView,
+    QuizView,
     TopicCreateView,
     TopicListView,
     UserTopicListView,
@@ -24,11 +26,13 @@ urlpatterns = [
     path("topic/new/", TopicCreateView.as_view(), name="topic-create"),
     path("topic/<int:topic_id>/essay/new/", EssayCreateView.as_view(), name="essay-create"),
     path("feedback/<int:pk>/", FeedbackDetailView.as_view(), name="feedback-detail"),
+    path("feedback/<int:pk>/correct/", EssayCorrectionValidateView.as_view(), name="essay-correct-validate"),
     path("vocabulary/", VocabularyListView.as_view(), name="vocabulary-list"),
     path("vocabulary/new/", VocabularyCreateView.as_view(), name="vocabulary-create"),
     path("vocabulary/generate/", VocabularyGenerateAIView.as_view(), name="vocabulary-generate"),
     path("vocabulary/<int:pk>/delete/", VocabularyDeleteView.as_view(), name="vocabulary-delete"),
     path("flashcards/", FlashcardView.as_view(), name="flashcard-list"),
+    path("quiz/", QuizView.as_view(), name="quiz-detail"),
 ]
 
 
