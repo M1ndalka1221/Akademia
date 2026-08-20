@@ -60,70 +60,113 @@
     <!-- Navigation Header -->
     <header class="sticky top-0 z-50 glass-panel border-b border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+            <div class="flex items-center justify-between h-16 gap-4">
                 <!-- Brand Logo -->
-                <a href="{% url 'learning:topic-list' %}" class="flex items-center space-x-3 group">
+                <a href="{% url 'learning:topic-list' %}" class="flex items-center space-x-3 group shrink-0">
                     <div
                         class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform duration-200">
                         <span class="font-display font-extrabold text-xl text-white">A</span>
                     </div>
-                    <div>
+                    <div class="flex items-center space-x-2">
                         <span
                             class="font-display font-bold text-xl tracking-tight text-white group-hover:text-indigo-400 transition-colors">AKADEMIA</span>
                         <span
-                            class="hidden sm:inline-block text-xs px-2 py-0.5 ml-2 rounded-full bg-indigo-500/10 text-indigo-400 font-medium border border-indigo-500/20">C1
+                            class="hidden xl:inline-block text-[11px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 font-medium border border-indigo-500/20">C1
                             Polish AI</span>
                     </div>
                 </a>
 
-                <!-- Navigation Links -->
-                <nav class="flex items-center space-x-3">
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden lg:flex items-center space-x-1 xl:space-x-2">
                     <a href="{% url 'learning:topic-list' %}"
-                        class="text-sm font-medium text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-800/60 transition-all">
+                        class="text-xs xl:text-sm font-medium text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 transition-all whitespace-nowrap">
                         Tematy AI
                     </a>
                     <a href="{% url 'learning:user-topic-list' %}"
-                        class="text-sm font-medium text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-800/60 transition-all">
+                        class="text-xs xl:text-sm font-medium text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 transition-all whitespace-nowrap">
                         Własne Tematy
                     </a>
                     <a href="{% url 'learning:essay-list' %}"
-                        class="text-sm font-medium text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-800/60 transition-all">
+                        class="text-xs xl:text-sm font-medium text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 transition-all whitespace-nowrap">
                         Napisane Eseje
                     </a>
+
+                    <div class="h-4 w-px bg-slate-800 mx-1"></div>
+
                     <a href="{% url 'learning:vocabulary-list' %}"
-                        class="text-sm font-medium text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-800/60 transition-all flex items-center space-x-1.5">
-                        <span>Słownictwo C1</span>
+                        class="text-xs xl:text-sm font-medium text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 transition-all flex items-center space-x-1.5 whitespace-nowrap">
+                        <span>Słownictwo</span>
                         <span
-                            class="bg-indigo-500/20 text-indigo-300 text-xs px-1.5 py-0.5 rounded border border-indigo-500/30 font-semibold">RU</span>
+                            class="bg-indigo-500/20 text-indigo-300 text-[10px] px-1 py-0.2 rounded border border-indigo-500/30 font-bold">RU</span>
                     </a>
                     <a href="{% url 'learning:flashcard-list' %}"
-                        class="text-sm font-medium text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-800/60 transition-all flex items-center space-x-1.5">
-                        <span>🎴 Fiszki C1</span>
+                        class="text-xs xl:text-sm font-medium text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 transition-all flex items-center space-x-1 whitespace-nowrap">
+                        <span>🎴 Fiszki</span>
                     </a>
                     <a href="{% url 'learning:quiz-detail' %}"
-                        class="text-sm font-medium text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-800/60 transition-all flex items-center space-x-1.5">
-                        <span>🎯 Quiz C1</span>
+                        class="text-xs xl:text-sm font-medium text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 transition-all flex items-center space-x-1 whitespace-nowrap">
+                        <span>🎯 Quiz</span>
                     </a>
+                </nav>
 
+                <!-- Right Action Cluster -->
+                <div class="flex items-center space-x-2.5 shrink-0">
                     <!-- Learning Streak Widget -->
-                    <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm font-semibold shadow-inner"
+                    <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs xl:text-sm font-semibold shadow-inner whitespace-nowrap"
                         title="Twoja seria codziennej nauki (Learning Streak)">
                         <span class="animate-pulse">🔥</span>
-                        <span>{{ streak_days }} {% if streak_days == 1 %}dzień{% else %}dni{% endif %} serii</span>
+                        <span>{{ streak_days }} {% if streak_days == 1 %}dzień{% else %}dni{% endif %}</span>
                     </div>
 
                     <a href="/admin/" target="_blank"
-                        class="text-sm font-medium text-purple-400 hover:text-purple-300 px-3 py-2 rounded-lg hover:bg-purple-500/10 transition-all border border-purple-500/20">
+                        class="hidden sm:inline-flex text-xs xl:text-sm font-medium text-purple-400 hover:text-purple-300 px-3 py-1.5 rounded-xl hover:bg-purple-500/10 transition-all border border-purple-500/20 whitespace-nowrap">
                         Admin
                     </a>
                     <a href="{% url 'learning:topic-create' %}"
-                        class="text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 px-3.5 py-2 rounded-xl shadow-lg shadow-indigo-600/25 transition-all">
+                        class="text-xs xl:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-3.5 py-2 rounded-xl shadow-lg shadow-indigo-600/25 transition-all whitespace-nowrap">
                         + Dodaj Temat
                     </a>
-                </nav>
+
+                    <!-- Mobile Menu Button Toggle -->
+                    <button type="button" 
+                            onclick="toggleMobileMenu()"
+                            class="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800 transition-all"
+                            aria-label="Toggle navigation menu">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Drawer Navigation -->
+        <div id="mobile-menu" class="hidden lg:hidden border-t border-slate-800 bg-slate-950/95 px-4 pt-3 pb-6 space-y-2">
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-500 px-3 py-1">Eseje & Tematy</div>
+            <a href="{% url 'learning:topic-list' %}" class="block px-3 py-2 rounded-xl text-sm font-medium text-slate-200 hover:bg-slate-900">Tematy AI</a>
+            <a href="{% url 'learning:user-topic-list' %}" class="block px-3 py-2 rounded-xl text-sm font-medium text-slate-200 hover:bg-slate-900">Własne Tematy</a>
+            <a href="{% url 'learning:essay-list' %}" class="block px-3 py-2 rounded-xl text-sm font-medium text-slate-200 hover:bg-slate-900">Napisane Eseje</a>
+
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-500 px-3 pt-3 py-1">Nauka Słownictwa C1</div>
+            <a href="{% url 'learning:vocabulary-list' %}" class="block px-3 py-2 rounded-xl text-sm font-medium text-slate-200 hover:bg-slate-900">Słownictwo Polsko-Rosyjskie C1</a>
+            <a href="{% url 'learning:flashcard-list' %}" class="block px-3 py-2 rounded-xl text-sm font-medium text-slate-200 hover:bg-slate-900">🎴 Fiszki C1</a>
+            <a href="{% url 'learning:quiz-detail' %}" class="block px-3 py-2 rounded-xl text-sm font-medium text-slate-200 hover:bg-slate-900">🎯 Quiz C1</a>
+            
+            <div class="pt-2 border-t border-slate-900 flex items-center justify-between">
+                <a href="/admin/" target="_blank" class="px-3 py-2 text-xs font-semibold text-purple-400">Panel Admina</a>
+                <a href="{% url 'learning:topic-create' %}" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold">+ Dodaj Temat</a>
             </div>
         </div>
     </header>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+            } else {
+                menu.classList.add('hidden');
+            }
+        }
+    </script>
 
     <!-- Global Messages Container -->
     {% if messages %}
