@@ -19,7 +19,7 @@ class LLMAnalysisError(Exception):
 
 
 class BaseEssayAnalyzer(ABC):
-    """Abstract Base Class defining the contract for essay evaluation services."""
+    """Abstract Base Class defining the contract for essay evaluation and vocabulary services."""
 
     @abstractmethod
     def analyze_essay(self, essay_content: str) -> dict[str, Any]:
@@ -32,11 +32,23 @@ class BaseEssayAnalyzer(ABC):
         """
         pass
 
+    @abstractmethod
+    def generate_c1_vocabulary(self, count: int = 5, theme: Optional[str] = None) -> list[dict[str, str]]:
+        """
+        Generate C1 level Polish vocabulary words with Russian translations.
+
+        :param count: Number of vocabulary items to generate.
+        :param theme: Optional topic or focus theme.
+        :return: List of dicts containing 'word', 'translation', and 'example_sentence'.
+        :raises LLMAnalysisError: If generation fails.
+        """
+        pass
+
 
 class LLMAnalyzer(BaseEssayAnalyzer):
     """
-    LLM-powered essay analyzer using Google Generative AI (Gemini).
-    Acts as a C1 level Polish language examiner.
+    LLM-powered essay analyzer and C1 Polish vocabulary generator using Google Generative AI (Gemini).
+    Acts as a C1 level Polish language examiner and lexicographer.
     """
 
     SYSTEM_PROMPT: str = (
@@ -56,6 +68,20 @@ class LLMAnalyzer(BaseEssayAnalyzer):
         '    }\n'
         '  ]\n'
         "}"
+    )
+
+    VOCAB_SYSTEM_PROMPT: str = (
+        "You are an expert C1 Polish-Russian lexicographer and language instructor. "
+        "Generate advanced C1-level Polish vocabulary words, phrases, or idioms, "
+        "along with accurate Russian translations and example sentences in Polish. "
+        "You MUST return ONLY a valid JSON array matching this exact structure without extra text:\n"
+        "[\n"
+        "  {\n"
+        '    "word": "string (advanced Polish C1 word or phrase)",\n'
+        '    "translation": "string (accurate Russian translation)",\n'
+        '    "example_sentence": "string (natural Polish example sentence demonstrating C1 usage)"\n'
+        "  }\n"
+        "]"
     )
 
     def __init__(
@@ -214,3 +240,143 @@ class LLMAnalyzer(BaseEssayAnalyzer):
                 }
             ]
         }
+
+    def generate_c1_vocabulary(self, count: int = 5, theme: Optional[str] = None) -> list[dict[str, str]]:
+        """
+        Generate C1 Polish vocabulary items with Russian translations using Gemini LLM.
+
+        :param count: Number of words/phrases to generate (default 5).
+        :param theme: Optional theme or focus area.
+        :return: List of dicts containing 'word', 'translation', and 'example_sentence'.
+        :raises LLMAnalysisError: If generation fails.
+        """
+        if not self.api_key or self._is_placeholder_key(self.api_key):
+            if getattr(settings, "DEBUG", False):
+                logger.info("Placeholder GOOGLE_API_KEY detected in DEBUG mode. Generating demo C1 vocabulary.")
+                return self._generate_demo_vocabulary(count=count)
+
+            raise LLMAnalysisError(
+                "Brak skonfigurowanego klucza Google API Key. Ustaw poprawny GOOGLE_API_KEY w pliku .env "
+                "(darmowy klucz można pobrać z https://aistudio.google.com/)."
+            )
+
+        try:
+            model = genai.GenerativeModel(
+                model_name=self.model_name,
+                system_instruction=self.VOCAB_SYSTEM_PROMPT
+            )
+            prompt = f"Generate {count} distinct C1-level Polish vocabulary words or phrases with Russian translations."
+            if theme:
+                prompt += f" Theme/Context: {theme}."
+
+            generation_config = genai.GenerationConfig(
+                response_mime_type="application/json",
+                temperature=0.7
+            )
+
+            response = model.generate_content(
+                prompt,
+                generation_config=generation_config
+            )
+
+            if not response or not hasattr(response, "text") or not response.text:
+                raise LLMAnalysisError("Brak odpowiedzi z usługi Gemini API podczas generowania słownictwa.")
+
+            raw_text: str = response.text.strip()
+            return self._parse_and_validate_vocab_response(raw_text)
+
+        except Exception as exc:
+            logger.error("LLM C1 vocabulary generation failed: %s", str(exc))
+            if isinstance(exc, LLMAnalysisError):
+                raise exc
+
+            exc_str = str(exc)
+            if "API_KEY_INVALID" in exc_str or "API key not valid" in exc_str:
+                if getattr(settings, "DEBUG", False):
+                    logger.warning("Invalid API key received from Google API. Falling back to demo vocabulary.")
+                    return self._generate_demo_vocabulary(count=count)
+
+                raise LLMAnalysisError(
+                    "Podany klucz GOOGLE_API_KEY w pliku .env jest nieprawidłowy. "
+                    "Pobierz darmowy klucz z https://aistudio.google.com/ i podmień go w pliku .env."
+                ) from exc
+
+            raise LLMAnalysisError(f"Błąd generowania słownictwa z Gemini API: {str(exc)}") from exc
+
+    def _parse_and_validate_vocab_response(self, raw_text: str) -> list[dict[str, str]]:
+        """
+        Parse raw JSON response for vocabulary generation and validate required fields.
+        """
+        clean_text: str = raw_text
+        if clean_text.startswith("```json"):
+            clean_text = clean_text[7:]
+        if clean_text.startswith("```"):
+            clean_text = clean_text[3:]
+        if clean_text.endswith("```"):
+            clean_text = clean_text[:-3]
+        clean_text = clean_text.strip()
+
+        try:
+            items = json.loads(clean_text)
+        except json.JSONDecodeError as exc:
+            raise LLMAnalysisError(f"Błędny format odpowiedzi JSON z LLM dla słownictwa: {str(exc)}") from exc
+
+        if not isinstance(items, list):
+            raise LLMAnalysisError("Odpowiedź Gemini API dla słownictwa musi być listą obietków JSON.")
+
+        validated_items = []
+        for item in items:
+            if isinstance(item, dict) and "word" in item and "translation" in item:
+                validated_items.append({
+                    "word": str(item["word"]).strip(),
+                    "translation": str(item["translation"]).strip(),
+                    "example_sentence": str(item.get("example_sentence", "")).strip()
+                })
+
+        if not validated_items:
+            raise LLMAnalysisError("Nie udało się odczytać żadnych słówek z odpowiedzi Gemini API.")
+
+        return validated_items
+
+    def _generate_demo_vocabulary(self, count: int = 5) -> list[dict[str, str]]:
+        """
+        Generates sample C1 Polish-Russian vocabulary items for local development when GOOGLE_API_KEY is missing.
+        """
+        demo_pool = [
+            {
+                "word": "błyskotliwość",
+                "translation": "остроумие / блестящий ум",
+                "example_sentence": "Publiczność była zachwycona błyskotliwością prelegenta podczas dyskusji."
+            },
+            {
+                "word": "uwypuklić",
+                "translation": "подчеркнуть / выделать / выпустить на первый план",
+                "example_sentence": "Warto uwypuklić najważniejsze zalety tego rozwiązania prawnego."
+            },
+            {
+                "word": "dociekliwość",
+                "translation": "пытливость / любознательность / дотошность",
+                "example_sentence": "Dziennikarska dociekliwość doprowadziła do ujawnienia prawdy."
+            },
+            {
+                "word": "poddać w wątpliwość",
+                "translation": "поставить под сомнение",
+                "example_sentence": "Wielu naukowców poddało w wątpliwość wyniki dotychczasowych badań."
+            },
+            {
+                "word": "starać się o zachowanie bezstronności",
+                "translation": "стремиться к сохранению беспристрастности",
+                "example_sentence": "Sędzia musi starać się o zachowanie bezstronności w każdej sytuacji."
+            },
+            {
+                "word": "nieuchronność",
+                "translation": "неизбежность / неотвратимость",
+                "example_sentence": "Zrozumienie nieuchronności zmian ułatwia adaptację do nowych warunków."
+            }
+        ]
+        import random
+        # Pick unique sample items up to count
+        if count >= len(demo_pool):
+            return demo_pool
+        return random.sample(demo_pool, count)
+

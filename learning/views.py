@@ -1,19 +1,14 @@
-"""
-Views for the Learning application.
-
-Implements Class-Based Views for Topic list, Essay submission, and AI Feedback view.
-"""
-
 from typing import Any, Dict
 from django.contrib import messages
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, View
 
-from learning.forms import EssayForm, TopicForm
-from learning.models import Essay, Feedback, Topic
+from learning.forms import EssayForm, TopicForm, VocabularyForm
+from learning.models import Essay, Feedback, Topic, Vocabulary
 from services.llm_analyzer import LLMAnalysisError, LLMAnalyzer
 
 
@@ -146,4 +141,121 @@ class EssayListView(ListView):
     def get_queryset(self):
         """Return all written essays ordered by creation date with related topic and feedback."""
         return Essay.objects.select_related("topic", "feedback").order_by("-created_at")
+
+
+class VocabularyListView(ListView):
+    """View to browse C1 level Polish vocabulary items with Russian translations."""
+
+    model = Vocabulary
+    template_name = "learning/vocabulary_list.html"
+    context_object_name = "vocabularies"
+    paginate_by = 12
+
+    def get_queryset(self):
+        """Filter vocabulary by search query 'q' and source filter ('ai', 'custom', 'all')."""
+        queryset = Vocabulary.objects.all().order_by("-created_at", "word")
+        source = self.request.GET.get("source", "all")
+        query = self.request.GET.get("q", "").strip()
+
+        if source == "ai":
+            queryset = queryset.filter(is_custom=False)
+        elif source == "custom":
+            queryset = queryset.filter(is_custom=True)
+
+        if query:
+            queryset = queryset.filter(
+                Q(word__icontains=query) |
+                Q(translation__icontains=query) |
+                Q(example_sentence__icontains=query)
+            )
+
+        return queryset
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        """Inject summary statistics and active filter parameters into template context."""
+        context = super().get_context_data(**kwargs)
+        context["source_filter"] = self.request.GET.get("source", "all")
+        context["search_query"] = self.request.GET.get("q", "").strip()
+        context["total_count"] = Vocabulary.objects.count()
+        context["ai_count"] = Vocabulary.objects.filter(is_custom=False).count()
+        context["custom_count"] = Vocabulary.objects.filter(is_custom=True).count()
+        return context
+
+
+class VocabularyCreateView(CreateView):
+    """View for users to manually add a custom C1 Polish vocabulary item."""
+
+    model = Vocabulary
+    form_class = VocabularyForm
+    template_name = "learning/vocabulary_form.html"
+    success_url = reverse_lazy("learning:vocabulary-list")
+
+    def form_valid(self, form: VocabularyForm) -> HttpResponseRedirect:
+        """Save vocabulary item as custom (is_custom=True, level='C1')."""
+        vocab: Vocabulary = form.save(commit=False)
+        vocab.is_custom = True
+        vocab.level = "C1"
+        if self.request.user and self.request.user.is_authenticated:
+            vocab.user = self.request.user
+        vocab.save()
+        self.object = vocab
+        messages.success(
+            self.request,
+            f"Pomyślnie dodano własne słówko C1: '{vocab.word}' -> '{vocab.translation}'!"
+        )
+        return HttpResponseRedirect(self.get_success_url())
+
+
+class VocabularyGenerateAIView(View):
+    """View handler to trigger Gemini AI generation of new C1 Polish-Russian words."""
+
+    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        analyzer = LLMAnalyzer()
+        try:
+            items = analyzer.generate_c1_vocabulary(count=5)
+            created_count = 0
+            for item in items:
+                _, created = Vocabulary.objects.get_or_create(
+                    word=item["word"],
+                    defaults={
+                        "translation": item["translation"],
+                        "example_sentence": item.get("example_sentence", ""),
+                        "level": "C1",
+                        "is_custom": False,
+                        "user": request.user if request.user and request.user.is_authenticated else None
+                    }
+                )
+                if created:
+                    created_count += 1
+
+            if created_count > 0:
+                messages.success(
+                    request,
+                    f"✨ Gemini AI pomyślnie wygenerowało {created_count} nowych słówek C1 z tłumaczeniem na rosyjski!"
+                )
+            else:
+                messages.info(
+                    request,
+                    "Gemini AI wygenerowało słówka, które znajdowały się już w bazie danych."
+                )
+        except LLMAnalysisError as exc:
+            messages.error(
+                request,
+                f"Wystąpił błąd podczas generowania słownictwa przez AI: {str(exc)}"
+            )
+
+        return redirect("learning:vocabulary-list")
+
+
+class VocabularyDeleteView(DeleteView):
+    """View to delete a custom or unwanted vocabulary item."""
+
+    model = Vocabulary
+    success_url = reverse_lazy("learning:vocabulary-list")
+
+    def form_valid(self, form: Any) -> HttpResponseRedirect:
+        vocab = self.get_object()
+        messages.info(self.request, f"Usunięto słówko: '{vocab.word}'.")
+        return super().form_valid(form)
+
 

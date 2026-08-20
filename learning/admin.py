@@ -43,7 +43,9 @@ class FeedbackAdmin(admin.ModelAdmin):
 @admin.register(Vocabulary)
 class VocabularyAdmin(admin.ModelAdmin):
     """Admin configuration for C1 Vocabulary items."""
-    list_display = ("id", "word", "translation", "created_at")
+    list_display = ("id", "word", "translation", "level", "is_custom", "user", "created_at")
+    list_filter = ("level", "is_custom", "created_at")
     search_fields = ("word", "translation", "example_sentence")
-    ordering = ("word",)
+    ordering = ("-created_at", "word")
+
 

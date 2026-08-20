@@ -91,26 +91,87 @@ class Feedback(models.Model):
 
 
 class Vocabulary(models.Model):
-    """Represents saved Polish vocabulary words with translations and usage examples."""
+    """Represents saved Polish vocabulary words (C1 level) with Russian translations and usage examples."""
 
+    user: models.ForeignKey = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="vocabularies",
+        help_text="User who saved this vocabulary item (null for AI/system defaults)."
+    )
     word: models.CharField = models.CharField(
         max_length=255,
-        help_text="The Polish word or phrase."
+        help_text="The Polish C1 word or phrase."
     )
     translation: models.CharField = models.CharField(
         max_length=255,
-        help_text="Translation of the word."
+        help_text="Russian translation of the word."
     )
     example_sentence: models.TextField = models.TextField(
         blank=True,
-        help_text="Example sentence illustrating usage."
+        help_text="Example sentence illustrating usage in Polish."
+    )
+    level: models.CharField = models.CharField(
+        max_length=10,
+        default="C1",
+        help_text="CEFR proficiency level (e.g., C1)."
+    )
+    is_custom: models.BooleanField = models.BooleanField(
+        default=False,
+        help_text="Designates whether this word was created manually by a user."
     )
     created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["word"]
+        ordering = ["-created_at", "word"]
         verbose_name = "Vocabulary"
         verbose_name_plural = "Vocabularies"
 
     def __str__(self) -> str:
         return f"{self.word} - {self.translation}"
+
+
+def calculate_learning_streak(user: Any = None) -> int:
+    """
+    Calculate consecutive calendar days of learning activity (essays written, custom topics or vocabulary added).
+    Returns integer number of days in current streak.
+    """
+    from datetime import date, timedelta
+    from django.utils import timezone
+
+    essay_qs = Essay.objects.all()
+    vocab_qs = Vocabulary.objects.all()
+    topic_qs = Topic.objects.filter(is_custom=True)
+
+    if user and getattr(user, "is_authenticated", False):
+        essay_qs = essay_qs.filter(user=user)
+        vocab_qs = vocab_qs.filter(user=user)
+        topic_qs = topic_qs.filter(user=user)
+
+    essay_dates = set(essay_qs.values_list("created_at__date", flat=True))
+    vocab_dates = set(vocab_qs.values_list("created_at__date", flat=True))
+    topic_dates = set(topic_qs.values_list("created_at__date", flat=True))
+
+    active_dates = essay_dates.union(vocab_dates).union(topic_dates)
+    if not active_dates:
+        return 0
+
+    today = timezone.localdate()
+    yesterday = today - timedelta(days=1)
+
+    if today in active_dates:
+        current_date = today
+    elif yesterday in active_dates:
+        current_date = yesterday
+    else:
+        return 0
+
+    streak = 0
+    while current_date in active_dates:
+        streak += 1
+        current_date -= timedelta(days=1)
+
+    return streak
+

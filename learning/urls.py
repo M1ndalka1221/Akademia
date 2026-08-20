@@ -8,6 +8,10 @@ from learning.views import (
     TopicCreateView,
     TopicListView,
     UserTopicListView,
+    VocabularyCreateView,
+    VocabularyDeleteView,
+    VocabularyGenerateAIView,
+    VocabularyListView,
 )
 
 app_name = "learning"
@@ -19,5 +23,10 @@ urlpatterns = [
     path("topic/new/", TopicCreateView.as_view(), name="topic-create"),
     path("topic/<int:topic_id>/essay/new/", EssayCreateView.as_view(), name="essay-create"),
     path("feedback/<int:pk>/", FeedbackDetailView.as_view(), name="feedback-detail"),
+    path("vocabulary/", VocabularyListView.as_view(), name="vocabulary-list"),
+    path("vocabulary/new/", VocabularyCreateView.as_view(), name="vocabulary-create"),
+    path("vocabulary/generate/", VocabularyGenerateAIView.as_view(), name="vocabulary-generate"),
+    path("vocabulary/<int:pk>/delete/", VocabularyDeleteView.as_view(), name="vocabulary-delete"),
 ]
+
 

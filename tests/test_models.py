@@ -63,11 +63,15 @@ def test_vocabulary_creation_and_str() -> None:
     """Test Vocabulary model creation and __str__ output."""
     vocab = Vocabulary.objects.create(
         word="wyzwanie",
-        translation="challenge",
-        example_sentence="To nowe zadanie to duże wyzwanie."
+        translation="вызов / задача",
+        example_sentence="To nowe zadanie to duże wyzwanie.",
+        level="C1",
+        is_custom=True
     )
     assert vocab.pk is not None
-    assert str(vocab) == "wyzwanie - challenge"
+    assert vocab.level == "C1"
+    assert vocab.is_custom is True
+    assert str(vocab) == "wyzwanie - вызов / задача"
 
 
 @pytest.mark.django_db
@@ -92,4 +96,22 @@ def test_topic_and_essay_user_association(django_user_model) -> None:
     assert essay.user == user
     assert essay in user.essays.all()
     assert topic in user.topics.all()
+
+
+@pytest.mark.django_db
+def test_calculate_learning_streak() -> None:
+    """Test learning streak calculation for active days."""
+    from django.utils import timezone
+    from learning.models import calculate_learning_streak
+    
+    # Initially 1 active day due to seed data created today
+    today = timezone.localdate()
+    assert calculate_learning_streak() >= 1
+
+    # Adding a new essay creates activity for today
+    topic = Topic.objects.create(title="Streak Test")
+    Essay.objects.create(topic=topic, content="Test content")
+    
+    assert calculate_learning_streak() >= 1
+
 
