@@ -104,8 +104,11 @@
     </div>
 </div>
 
+<script id="quiz-data" type="application/json">
+    {{ quiz_json|safe }}
+</script>
 <script>
-    const questions = {{ quiz_json|safe }};
+    const questions = JSON.parse(document.getElementById('quiz-data').textContent || '[]');
     let currentQIndex = 0;
     let score = 0;
     let answered = false;
