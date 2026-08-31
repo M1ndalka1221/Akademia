@@ -6,14 +6,14 @@
 <div class="space-y-8">
     <!-- Hero Header -->
     <div class="text-center max-w-3xl mx-auto space-y-4 py-6">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             Egzaminator C1 z Inteligencją Gemini
         </span>
-        <h1 class="text-4xl sm:text-5xl font-display font-extrabold tracking-tight text-white">
+        <h1 class="text-4xl sm:text-5xl font-display font-extrabold tracking-tight text-slate-900 dark:text-white">
             Rozwijaj swój język polski z <span class="gradient-text">Akademią</span>
         </h1>
-        <p class="text-slate-400 text-lg">
+        <p class="text-slate-600 dark:text-slate-400 text-lg">
             Wybierz temat, napisz esej i otrzymaj profesjonalną analizę błędów gramatycznych oraz propozycje zaawansowanego słownictwa na poziomie akademickim.
         </p>
     </div>
@@ -23,19 +23,19 @@
         {% for topic in topics %}
             <div class="glass-panel rounded-2xl p-6 flex flex-col justify-between hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 group">
                 <div class="space-y-3">
-                    <div class="flex items-center justify-between text-xs text-indigo-400 font-medium">
+                    <div class="flex items-center justify-between text-xs text-indigo-600 dark:text-indigo-400 font-medium">
                         <span>Temat #{{ topic.id }}</span>
                         <span>{{ topic.created_at|date:"d.m.Y" }}</span>
                     </div>
-                    <h2 class="text-xl font-display font-bold text-white group-hover:text-indigo-300 transition-colors">
+                    <h2 class="text-xl font-display font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
                         {{ topic.title }}
                     </h2>
-                    <p class="text-sm text-slate-400 line-clamp-3 leading-relaxed">
+                    <p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
                         {{ topic.description|default:"Brak szczegółowego opisu dla tego tematu." }}
                     </p>
                 </div>
 
-                <div class="pt-6 mt-4 border-t border-slate-800/80">
+                <div class="pt-6 mt-4 border-t border-slate-200 dark:border-slate-800/80">
                     <a href="{% url 'learning:essay-create' topic.id %}" 
                        class="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition-all duration-200 shadow-lg shadow-indigo-600/25 group-hover:shadow-indigo-500/40">
                         <span>Napisz esej</span>
@@ -45,11 +45,11 @@
             </div>
         {% empty %}
             <div class="col-span-full glass-panel rounded-2xl p-12 text-center space-y-4">
-                <div class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-500">
+                <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center mx-auto text-slate-400 dark:text-slate-500">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 </div>
-                <h3 class="text-xl font-bold text-white">Brak dostępnych tematów</h3>
-                <p class="text-slate-400 max-w-md mx-auto text-sm">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white">Brak dostępnych tematów</h3>
+                <p class="text-slate-600 dark:text-slate-400 max-w-md mx-auto text-sm">
                     W bazie danych nie znaleziono jeszcze tematów esejów. Skorzystaj z panelu administracyjnego Django, aby dodać pierwsze tematy!
                 </p>
             </div>
@@ -57,3 +57,4 @@
     </div>
 </div>
 {% endblock %}
+

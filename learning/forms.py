@@ -40,10 +40,10 @@ class TopicForm(forms.ModelForm):
             "title": forms.TextInput(
                 attrs={
                     "class": (
-                        "w-full p-4 border border-slate-700 rounded-xl "
+                        "w-full p-4 border border-slate-300 dark:border-slate-700 rounded-xl "
                         "focus:ring-2 focus:ring-indigo-500 focus:border-transparent "
-                        "bg-slate-900 text-slate-100 font-sans shadow-sm "
-                        "placeholder-slate-500 transition-all duration-200"
+                        "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans shadow-sm "
+                        "placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200"
                     ),
                     "placeholder": "Tytuł tematu (np. Rozwój technologii w XXI wieku)",
                 }
@@ -51,10 +51,10 @@ class TopicForm(forms.ModelForm):
             "description": forms.Textarea(
                 attrs={
                     "class": (
-                        "w-full p-4 border border-slate-700 rounded-xl "
+                        "w-full p-4 border border-slate-300 dark:border-slate-700 rounded-xl "
                         "focus:ring-2 focus:ring-indigo-500 focus:border-transparent "
-                        "bg-slate-900 text-slate-100 font-sans shadow-sm "
-                        "placeholder-slate-500 transition-all duration-200"
+                        "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans shadow-sm "
+                        "placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200"
                     ),
                     "rows": 4,
                     "placeholder": "Opis tematu lub dodatkowe instrukcje (opcjonalnie)...",
@@ -77,10 +77,10 @@ class VocabularyForm(forms.ModelForm):
             "word": forms.TextInput(
                 attrs={
                     "class": (
-                        "w-full p-4 border border-slate-700 rounded-xl "
+                        "w-full p-4 border border-slate-300 dark:border-slate-700 rounded-xl "
                         "focus:ring-2 focus:ring-indigo-500 focus:border-transparent "
-                        "bg-slate-900 text-slate-100 font-sans shadow-sm "
-                        "placeholder-slate-500 transition-all duration-200"
+                        "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans shadow-sm "
+                        "placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200"
                     ),
                     "placeholder": "Słowo lub zwrot po polsku (np. zawiłość, poddać w wątpliwość)",
                 }
@@ -88,10 +88,10 @@ class VocabularyForm(forms.ModelForm):
             "translation": forms.TextInput(
                 attrs={
                     "class": (
-                        "w-full p-4 border border-slate-700 rounded-xl "
+                        "w-full p-4 border border-slate-300 dark:border-slate-700 rounded-xl "
                         "focus:ring-2 focus:ring-indigo-500 focus:border-transparent "
-                        "bg-slate-900 text-slate-100 font-sans shadow-sm "
-                        "placeholder-slate-500 transition-all duration-200"
+                        "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans shadow-sm "
+                        "placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200"
                     ),
                     "placeholder": "Tłumaczenie na język rosyjski (np. сложность / запутанность)",
                 }
@@ -99,10 +99,10 @@ class VocabularyForm(forms.ModelForm):
             "example_sentence": forms.Textarea(
                 attrs={
                     "class": (
-                        "w-full p-4 border border-slate-700 rounded-xl "
+                        "w-full p-4 border border-slate-300 dark:border-slate-700 rounded-xl "
                         "focus:ring-2 focus:ring-indigo-500 focus:border-transparent "
-                        "bg-slate-900 text-slate-100 font-sans shadow-sm "
-                        "placeholder-slate-500 transition-all duration-200"
+                        "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans shadow-sm "
+                        "placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200"
                     ),
                     "rows": 3,
                     "placeholder": "Przykładowe zdanie użycia po polsku...",

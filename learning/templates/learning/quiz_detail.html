@@ -5,15 +5,15 @@
 {% block content %}
 <div class="max-w-3xl mx-auto space-y-8">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 glass-panel rounded-3xl p-6 sm:p-8 border border-slate-800">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 glass-panel rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800">
         <div class="space-y-2">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
                 ✨ Gemini AI Quiz Generator
             </span>
-            <h1 class="text-3xl font-display font-extrabold text-white tracking-tight">
+            <h1 class="text-3xl font-display font-extrabold text-slate-900 dark:text-white tracking-tight">
                 Daily AI Quiz <span class="gradient-text">Słownictwa C1</span>
             </h1>
-            <p class="text-slate-400 text-sm">
+            <p class="text-slate-600 dark:text-slate-400 text-sm">
                 Sprawdź swoją znajomość zaawansowanych słówek i zwrotów C1 w 5-pytaniowym teście wiedzy.
             </p>
         </div>
@@ -26,23 +26,23 @@
     <!-- Active Quiz Card Area -->
     <div id="quiz-wrapper" class="space-y-6">
         <!-- Progress Bar & Score Tracker -->
-        <div class="glass-panel rounded-2xl p-4 border border-slate-800 flex items-center justify-between text-xs sm:text-sm">
-            <span class="font-semibold text-slate-300" id="question-tracker">Pytanie 1 z {{ total_questions }}</span>
+        <div class="glass-panel rounded-2xl p-4 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm">
+            <span class="font-semibold text-slate-700 dark:text-slate-300" id="question-tracker">Pytanie 1 z {{ total_questions }}</span>
 
             <div class="flex items-center space-x-4">
-                <span class="text-emerald-400 font-medium">Wynik: <strong id="score-count">0</strong> / {{ total_questions }}</span>
-                <div class="w-32 sm:w-44 bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+                <span class="text-emerald-600 dark:text-emerald-400 font-medium">Wynik: <strong id="score-count">0</strong> / {{ total_questions }}</span>
+                <div class="w-32 sm:w-44 bg-slate-200 dark:bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-300 dark:border-slate-800">
                     <div id="progress-bar" class="bg-gradient-to-r from-purple-500 to-indigo-500 h-full transition-all duration-300" style="width: 20%"></div>
                 </div>
             </div>
         </div>
 
         <!-- Question Card -->
-        <div class="glass-panel rounded-3xl p-6 sm:p-10 border border-slate-800 space-y-6 shadow-2xl bg-slate-900/90">
+        <div class="glass-panel rounded-3xl p-6 sm:p-10 border border-slate-200 dark:border-slate-800 space-y-6 shadow-2xl bg-white/95 dark:bg-slate-900/90">
             <!-- Question Title -->
             <div class="space-y-2">
-                <div class="text-xs font-semibold uppercase tracking-widest text-indigo-400" id="question-id-label">Pytanie 1</div>
-                <h2 class="text-xl sm:text-2xl font-display font-extrabold text-white leading-relaxed" id="question-text">
+                <div class="text-xs font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400" id="question-id-label">Pytanie 1</div>
+                <h2 class="text-xl sm:text-2xl font-display font-extrabold text-slate-900 dark:text-white leading-relaxed" id="question-text">
                     Ładowanie pytania...
                 </h2>
             </div>
@@ -57,7 +57,7 @@
                 <div class="flex items-center space-x-2 font-bold text-sm" id="explanation-status">
                     <!-- Dynamic status icon + title -->
                 </div>
-                <p class="text-sm text-slate-300 leading-relaxed" id="explanation-text">
+                <p class="text-sm leading-relaxed" id="explanation-text">
                     <!-- Dynamic explanation text -->
                 </p>
             </div>
@@ -68,7 +68,7 @@
                         id="next-btn" 
                         onclick="nextQuestion()" 
                         disabled 
-                        class="px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm transition-all shadow-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-500">
+                        class="px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm transition-all shadow-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-500 cursor-pointer">
                     Następne pytanie &rarr;
                 </button>
             </div>
@@ -76,28 +76,28 @@
     </div>
 
     <!-- Final Quiz Result Screen (Hidden by default) -->
-    <div id="result-screen" class="hidden glass-panel rounded-3xl p-8 sm:p-12 border border-indigo-500/30 text-center space-y-6 bg-slate-950/90 shadow-2xl">
+    <div id="result-screen" class="hidden glass-panel rounded-3xl p-8 sm:p-12 border border-indigo-500/30 text-center space-y-6 bg-white/95 dark:bg-slate-950/90 shadow-2xl">
         <div class="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mx-auto text-3xl shadow-xl shadow-purple-500/30 animate-pulse">
             🎯
         </div>
 
         <div class="space-y-2">
-            <h2 class="text-3xl font-display font-extrabold text-white">Quiz Zakończony!</h2>
-            <p class="text-slate-400 text-sm max-w-md mx-auto" id="result-subtitle">
+            <h2 class="text-3xl font-display font-extrabold text-slate-900 dark:text-white">Quiz Zakończony!</h2>
+            <p class="text-slate-600 dark:text-slate-400 text-sm max-w-md mx-auto" id="result-subtitle">
                 Oto Twój wynik w quizie ze słownictwa C1.
             </p>
         </div>
 
-        <div class="bg-slate-900/90 rounded-2xl p-6 border border-slate-800 inline-block px-12 space-y-1">
-            <div class="text-4xl font-display font-extrabold text-indigo-400" id="result-score-text">0 / 5</div>
-            <div class="text-xs font-semibold text-slate-400" id="result-percentage">0% poprawnych odpowiedzi</div>
+        <div class="bg-slate-100 dark:bg-slate-900/90 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 inline-block px-12 space-y-1">
+            <div class="text-4xl font-display font-extrabold text-indigo-600 dark:text-indigo-400" id="result-score-text">0 / 5</div>
+            <div class="text-xs font-semibold text-slate-600 dark:text-slate-400" id="result-percentage">0% poprawnych odpowiedzi</div>
         </div>
 
         <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
             <a href="{% url 'learning:quiz-detail' %}" class="px-6 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm transition-all shadow-lg shadow-purple-600/25">
                 ⚡ Wygeneruj Nowy Quiz
             </a>
-            <a href="{% url 'learning:flashcard-list' %}" class="px-6 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm transition-all border border-slate-700">
+            <a href="{% url 'learning:flashcard-list' %}" class="px-6 py-3.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-sm transition-all border border-slate-300 dark:border-slate-700">
                 🎴 Otwórz Fiszki C1
             </a>
         </div>
@@ -131,12 +131,12 @@
         q.options.forEach((optText, idx) => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'w-full p-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left text-slate-200 font-medium text-sm transition-all flex items-center space-x-3 group text-left';
+            btn.className = 'w-full p-4 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-left text-slate-800 dark:text-slate-200 font-medium text-sm transition-all flex items-center space-x-3 group shadow-sm cursor-pointer';
             btn.onclick = () => selectOption(idx);
             btn.id = `option-btn-${idx}`;
 
             btn.innerHTML = `
-                <span class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 group-hover:text-white font-bold flex items-center justify-center shrink-0 text-xs border border-slate-700">
+                <span class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white font-bold flex items-center justify-center shrink-0 text-xs border border-slate-200 dark:border-slate-700">
                     ${letters[idx] || idx + 1}
                 </span>
                 <span class="flex-grow">${optText}</span>
@@ -158,13 +158,13 @@
 
         for (let i = 0; i < buttons.length; i++) {
             buttons[i].disabled = true;
-            buttons[i].classList.remove('hover:bg-slate-800', 'cursor-pointer');
+            buttons[i].classList.remove('hover:bg-slate-50', 'dark:hover:bg-slate-800', 'cursor-pointer');
             buttons[i].classList.add('cursor-default');
 
             if (i === correctIndex) {
-                buttons[i].className = 'w-full p-4 rounded-xl bg-emerald-500/15 border-2 border-emerald-500 text-left text-emerald-200 font-semibold text-sm transition-all flex items-center space-x-3 shadow-lg shadow-emerald-500/10';
+                buttons[i].className = 'w-full p-4 rounded-xl bg-emerald-500/15 border-2 border-emerald-500 text-left text-emerald-800 dark:text-emerald-200 font-semibold text-sm transition-all flex items-center space-x-3 shadow-lg shadow-emerald-500/10';
             } else if (i === selectedIndex && selectedIndex !== correctIndex) {
-                buttons[i].className = 'w-full p-4 rounded-xl bg-rose-500/15 border-2 border-rose-500 text-left text-rose-200 font-semibold text-sm transition-all flex items-center space-x-3';
+                buttons[i].className = 'w-full p-4 rounded-xl bg-rose-500/15 border-2 border-rose-500 text-left text-rose-800 dark:text-rose-200 font-semibold text-sm transition-all flex items-center space-x-3';
             } else {
                 buttons[i].classList.add('opacity-50');
             }
@@ -178,10 +178,10 @@
             score++;
             document.getElementById('score-count').innerText = score;
 
-            expBox.className = 'rounded-2xl p-4 sm:p-5 border bg-emerald-500/10 border-emerald-500/30 text-emerald-300 space-y-1';
+            expBox.className = 'rounded-2xl p-4 sm:p-5 border bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300 space-y-1';
             expStatus.innerHTML = '<span>✅ Doskonale! Prawidłowa odpowiedź.</span>';
         } else {
-            expBox.className = 'rounded-2xl p-4 sm:p-5 border bg-rose-500/10 border-rose-500/30 text-rose-300 space-y-1';
+            expBox.className = 'rounded-2xl p-4 sm:p-5 border bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300 space-y-1';
             expStatus.innerHTML = '<span>❌ Niepoprawna odpowiedź.</span>';
         }
 
@@ -223,3 +223,4 @@
     });
 </script>
 {% endblock %}
+
